@@ -16,61 +16,64 @@
 #ifdef ENABLE_GLX
 #include "offscreen-old/OffscreenContextGLX.h"
 #endif
+#ifdef NULLGL
+#include "OffscreenContextNULL.h"
+#endif
 
 namespace OffscreenContextFactory {
 
 const char *defaultProvider() {
+#ifdef NULLGL
+  return "nullgl";
+#else
 #ifdef __APPLE__
-  return "nsopengl";
+  return "nsopengl-old";
 #endif
 #ifdef ENABLE_EGL
-  return "egl";
+  return "egl-old";
 #endif
 #ifdef ENABLE_GLX
-  return "glx";
+  return "glx-old";
 #endif
 #ifdef _WIN32
-  return "wgl";
+  return "wgl-old";
 #endif
-#ifdef ENABLE_GLFW
- return "glfw";
-#endif
+#endif  // NULLGL
 }
 
 std::shared_ptr<OpenGLContext> create(const std::string& provider, const OffscreenContextFactory::ContextAttributes& attrib)
 {
   // FIXME: We could log an error if the chosen provider doesn't support all our attribs.
+#ifdef NULLGL
+  if (provider == "nullgl") {
+    return CreateOffscreenContextNULL();
+  }
+#else
 #ifdef __APPLE__
-  if (provider == "nsopengl") {
-    return CreateOffscreenContextNSOpenGL(attrib.width, attrib.height, attrib.majorGLVersion, attrib.minorGLVersion);
+  if (provider == "nsopengl-old") {
+    return offscreen_old::CreateOffscreenContextNSOpenGL(attrib.width, attrib.height, attrib.majorGLVersion, attrib.minorGLVersion);
   }
 #endif
 #if ENABLE_EGL
-  if (provider == "egl") {
-    return CreateOffscreenContextEGL(attrib.width, attrib.height, attrib.majorGLVersion, attrib.minorGLVersion,
-                                     attrib.gles, attrib.compatibilityProfile, attrib.gpu);
+  if (provider == "egl-old") {
+    return offscreen_old::CreateOffscreenContextEGL(attrib.width, attrib.height,
+                                                    attrib.majorGLVersion, attrib.minorGLVersion,
+                                                    attrib.gles, attrib.compatibilityProfile, attrib.gpu);
   }
   else
 #endif
 #ifdef ENABLE_GLX
-  if (provider == "glx") {
-   return CreateOffscreenContextGLX(attrib.width, attrib.height, attrib.majorGLVersion, attrib.minorGLVersion, 
+  if (provider == "glx-old") {
+   return offscreen_old::CreateOffscreenContextGLX(attrib.width, attrib.height, attrib.majorGLVersion, attrib.minorGLVersion, 
                                     attrib.gles, attrib.compatibilityProfile);
   }
 #endif
 #ifdef _WIN32
-  if (provider == "wgl") {
-    return CreateOffscreenContextWGL(attrib.width, attrib.height, attrib.majorGLVersion, attrib.minorGLVersion,
-                                     attrib.compatibilityProfile);
+  if (provider == "wgl-old") {
   }
   else
 #endif
-#ifdef ENABLE_GLFW
-  if (provider == "glfw") {
-    return GLFWContext::create(attrib.width, attrib.height, attrib.majorGLVersion, attrib.minorGLVersion,
-                               attrib.invisible);
-  }
-#endif
+#endif  // NULLGL
   LOG("GL context provider '%1$s' not found", provider);
   return {};
 }
