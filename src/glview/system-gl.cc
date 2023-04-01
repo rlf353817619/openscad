@@ -52,7 +52,11 @@ std::string glew_extensions_dump()
   return out.str();
 }
 
-std::string glew_dump()
+// FIXME: Add:
+// * Core vs. compatibility profile
+// * OpenGL vs. GLES
+
+std::string gl_dump()
 {
   GLint rbits, gbits, bbits, abits, dbits, sbits;
   glGetIntegerv(GL_RED_BITS, &rbits);
@@ -63,8 +67,7 @@ std::string glew_dump()
   glGetIntegerv(GL_STENCIL_BITS, &sbits);
 
   std::ostringstream out;
-  out << "GLEW version: " << glewGetString(GLEW_VERSION)
-      << "\nOpenGL Version: " << (const char *)glGetString(GL_VERSION)
+  out << "OpenGL Version: " << (const char *)glGetString(GL_VERSION)
       << "\nGL Renderer: " << (const char *)glGetString(GL_RENDERER)
       << "\nGL Vendor: " << (const char *)glGetString(GL_VENDOR)
       << boost::format("\nRGBA(%d%d%d%d), depth(%d), stencil(%d)") %
@@ -74,7 +77,6 @@ std::string glew_dump()
       << "\nGL_EXT_framebuffer_object: "
       << (glewIsSupported("GL_EXT_framebuffer_object") ? "yes" : "no")
       << "\nGL_EXT_packed_depth_stencil: "
-      << (glewIsSupported("GL_EXT_packed_depth_stencil") ? "yes" : "no")
-      << "\n";
+      << (glewIsSupported("GL_EXT_packed_depth_stencil") ? "yes" : "no");
   return out.str();
 }

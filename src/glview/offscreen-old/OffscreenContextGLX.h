@@ -4,6 +4,10 @@
 
 #include "OffscreenContext.h"
 
+namespace offscreen_old {
+
 std::shared_ptr<OffscreenContext> CreateOffscreenContextGLX(
     unsigned int width, unsigned int height, unsigned int majorGLVersion, 
     unsigned int minorGLVersion, bool gles, bool compatibilityProfile);
+
+}  // namespace offscreen_old

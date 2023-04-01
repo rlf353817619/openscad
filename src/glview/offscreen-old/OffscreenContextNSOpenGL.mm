@@ -17,18 +17,24 @@ public:
     [this->openGLContext release];
     [this->pool release];
   }
-  std::string getInfo() const override;
-  
+
+  std::string getInfo() const override {
+    std::ostringstream out;
+    out << "GL context creator: NSOpenGL (old)\n"
+	<< "PNG generator: Core Foundation\n";
+    return out.str();
+  }
+
+  bool makeCurrent() const override {
+    [this->openGLContext makeCurrentContext];
+    return true;
+  }
+
   NSOpenGLContext *openGLContext;
   NSAutoreleasePool *pool;
 };
 
-std::string OffscreenContextNSOpenGL::getInfo() const {
-  std::ostringstream out;
-  out << "GL context creator: NSOpenGL\n"
-      << "PNG generator: Core Foundation\n";
-  return out.str();
-}
+namespace offscreen_old {
 
 std::shared_ptr<OffscreenContext> CreateOffscreenContextNSOpenGL(
   unsigned int width, unsigned int height, unsigned int majorGLVersion, 
@@ -61,8 +67,7 @@ std::shared_ptr<OffscreenContext> CreateOffscreenContextNSOpenGL(
     return nullptr;
   }
 
-  [ctx->openGLContext makeCurrentContext];
-  
   return ctx;
 }
 
+}  // namespace offscreen_old

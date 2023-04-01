@@ -11,13 +11,11 @@
 class OffscreenContextNULL : public OffscreenContext {
 public:
   OffscreenContextNULL() : OffscreenContext(0, 0) {}
-  std::string getInfo() const override;
+  std::string getInfo() const override {
+    return "GL context creator: NULLGL";
+  }
+  bool makeCurrent() const override { return true; }
 };
-
-std::string offscreen_context_getinfo(OffscreenContext *ctx)
-{
-  return "";
-}
 
 std::shared_ptr<OffscreenContext> CreateOffscreenContextNULL()
 {

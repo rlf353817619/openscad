@@ -22,6 +22,7 @@ OffscreenView::OffscreenView(unsigned int width, unsigned int height)
   };
   this->ctx = OffscreenContextFactory::create(OffscreenContextFactory::defaultProvider(), attrib);
   if (!this->ctx) throw OffscreenViewException("Unable to obtain GL Context");
+  if (!this->ctx->makeCurrent()) throw OffscreenViewException("Unable to make GL context current");
 
 #ifndef NULLGL
   if (!initializeGlew()) throw OffscreenViewException("Unable to initialize Glew");
@@ -103,5 +104,13 @@ bool OffscreenView::save(std::ostream& output) const
 
 std::string OffscreenView::getRendererInfo() const
 {
-  return STR(glew_dump(), this->ctx->getInfo());
+  std::ostringstream result;
+
+#ifndef NULLGL
+  result << glewInfo() << "\n";
+#endif
+	result << this->ctx->getInfo() << "\n"
+         << gl_dump();
+
+  return result.str();
 }
