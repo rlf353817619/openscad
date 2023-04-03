@@ -4,6 +4,8 @@
 #include <vector>
 #include <ostream>
 #include "imageutils.h"
+#include "glew-utils.h"
+#include "printutils.h"
 
 /*
    Capture framebuffer from OpenGL and write it to the given filename as PNG.
@@ -52,11 +54,19 @@ bool save_framebuffer_common(const OffscreenContext *ctx, std::ostream& output)
 OffscreenContext *create_offscreen_context_common(OffscreenContext *ctx)
 {
   if (!ctx) return nullptr;
-  GLenum err = glewInit(); // must come after Context creation and before FBO c$
-  if (GLEW_OK != err) {
-    std::cerr << "Unable to init GLEW: " << glewGetErrorString(err) << "\n";
+
+  if (!initializeGlew()) return nullptr;
+#ifdef USE_GLAD
+  // FIXME: We could ask for gladLoaderLoadGLES2() here instead
+  const auto version = gladLoaderLoadGL();
+  if (version == 0) {
+    // FIXME: Can we figure out why?
+    std::cerr << "Unable to init GLAD" << std::endl;
     return nullptr;
   }
+  // FIXME: Only if verbose
+  LOG("GLAD: Loaded OpenGL %1$d.%2$d", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+#endif
 
   return ctx;
 }

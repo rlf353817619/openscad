@@ -45,5 +45,5 @@ bool OffscreenView::save(std::ostream& output) const
 
 std::string OffscreenView::getRendererInfo() const
 {
-  return STR(glew_dump(), offscreen_context_getinfo(this->ctx));
+  return STR(gl_dump(), offscreen_context_getinfo(this->ctx));
 }
