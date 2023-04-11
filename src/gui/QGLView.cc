@@ -26,11 +26,9 @@
 
 #include "qtgettext.h"
 #include "QGLView.h"
-#include "glew-utils.h"
 #include "Preferences.h"
 #include "Renderer.h"
 #include "degree_trig.h"
-#include "glew-utils.h"
 
 #include <QApplication>
 #include <QWheelEvent>
@@ -86,9 +84,6 @@ void QGLView::viewAll()
 
 void QGLView::initializeGL()
 {
-  // Since OpenCSG requires glew, we need to initialize it.
-  // ..in a separate compilation unit to avoid duplicate symbols with GLAD.
-  initializeGlew();
 #ifdef USE_GLAD
   // FIXME: We could ask for gladLoadGLES2UserPtr() here instead
   const auto version = gladLoadGLUserPtr([](void *ctx, const char *name) -> GLADapiproc {
@@ -108,7 +103,9 @@ void QGLView::initializeGL()
 std::string QGLView::getRendererInfo() const
 {
   std::ostringstream info;
-  info << glewInfo() << "\n";
+
+  // FIXME: GLAD info?
+//  info << glewInfo() << "\n";
   info << gl_dump() << "\n";
   // Don't translate as translated text in the Library Info dialog is not wanted
   info << "\nQt graphics widget: QOpenGLWidget";

@@ -388,7 +388,7 @@ void OpenCSGRenderer::renderCSGProducts(const std::shared_ptr<CSGProducts>& prod
         if (csgobj.leaf->geom) primitives.push_back(createCSGPrimitive(csgobj, OpenCSG::Subtraction, highlight_mode, background_mode, OpenSCADOperator::DIFFERENCE));
       }
       if (primitives.size() > 1) {
-        OpenCSG::render(primitives);
+        GL_DEBUG_CHECKD(OpenCSG::render(primitives));
         GL_CHECKD(glDepthFunc(GL_EQUAL));
       }
 

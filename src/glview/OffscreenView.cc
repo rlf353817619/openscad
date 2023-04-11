@@ -10,7 +10,6 @@
 #include "imageutils.h"
 #include "printutils.h"
 #include "OffscreenContextFactory.h"
-#include "glew-utils.h"
 
 OffscreenView::OffscreenView(unsigned int width, unsigned int height)
 {
@@ -25,7 +24,7 @@ OffscreenView::OffscreenView(unsigned int width, unsigned int height)
   if (!this->ctx->makeCurrent()) throw OffscreenViewException("Unable to make GL context current");
 
 #ifndef NULLGL
-  if (!initializeGlew()) throw OffscreenViewException("Unable to initialize Glew");
+//  if (!initializeGlew()) throw OffscreenViewException("Unable to initialize Glew");
 #ifdef USE_GLAD
   // FIXME: We could ask for gladLoaderLoadGLES2() here instead
   const auto version = gladLoaderLoadGL();
@@ -107,7 +106,8 @@ std::string OffscreenView::getRendererInfo() const
   std::ostringstream result;
 
 #ifndef NULLGL
-  result << glewInfo() << "\n";
+// FIXME: GLAD info?
+//  result << glewInfo() << "\n";
 #endif
 	result << this->ctx->getInfo() << "\n"
          << gl_dump();

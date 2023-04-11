@@ -3,7 +3,7 @@
 #ifndef NULLGL
 
 #ifdef USE_GLEW
-#include <GL/glew.h>
+#include "system-gl.h"
 #endif
 #ifdef USE_GLAD
   #ifdef _WIN32
