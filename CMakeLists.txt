@@ -416,6 +416,7 @@ target_include_directories(OpenSCAD PRIVATE
   "src"
   "src/core"
   "src/core/customizer"
+  "src/ext"
   "src/ext/json"
   "src/ext/lexertl/include"
   "src/ext/libtess2/Include"
@@ -544,7 +545,9 @@ if(APPLE)
   if(NOT NULLGL)
     target_compile_definitions(OpenSCAD PRIVATE GL_SILENCE_DEPRECATION)
     set(OFFSCREEN_METHOD "Apple NSOpenGL")
-    set(PLATFORM_SOURCES ${PLATFORM_SOURCES} src/glview/offscreen-old/OffscreenContextNSOpenGL.mm)
+    set(PLATFORM_SOURCES ${PLATFORM_SOURCES}
+        src/glview/offscreen-old/OffscreenContextNSOpenGL.mm
+        src/glview/OffscreenContextCGL.cc)
   endif()
   find_library(COCOA_LIBRARY Cocoa)
   target_link_libraries(OpenSCAD PRIVATE ${COCOA_LIBRARY})
@@ -556,16 +559,20 @@ elseif(UNIX)
       target_compile_definitions(OpenSCAD PRIVATE ENABLE_EGL)
       set(OFFSCREEN_METHOD "Unix EGL")
       message(STATUS "Offscreen OpenGL Context - using Unix EGL")
-      set(PLATFORM_SOURCES ${PLATFORM_SOURCES} src/glview/offscreen-old/OffscreenContextEGL.cc)
+      set(PLATFORM_SOURCES ${PLATFORM_SOURCES}
+          src/glview/offscreen-old/OffscreenContextEGL.cc
+          src/glview/OffscreenContextEGL.cc)
       target_compile_definitions(OpenSCAD PRIVATE GLEW_EGL)
       target_link_libraries(OpenSCAD PRIVATE OpenGL::EGL)
     else()
       target_compile_definitions(OpenSCAD PRIVATE ENABLE_GLX)
       set(OFFSCREEN_METHOD "Unix GLX on X11")
       message(STATUS "Offscreen OpenGL Context - using Unix GLX on X11")
-      set(PLATFORM_SOURCES ${PLATFORM_SOURCES} src/glview/offscreen-old/OffscreenContextGLX.cc)
+      set(PLATFORM_SOURCES ${PLATFORM_SOURCES}
+          src/glview/offscreen-old/OffscreenContextGLX.cc
+          src/glview/OffscreenContextGLX.cc)
       find_library(X11_LIBRARY X11)
-      target_link_libraries(OpenSCAD PRIVATE ${X11_LIBRARY})
+      target_link_libraries(OpenSCAD PRIVATE ${X11_LIBRARY} ${CMAKE_DL_LIBS})
     endif()
   endif()
 elseif(WIN32)
@@ -576,7 +583,9 @@ elseif(WIN32)
   if(NOT NULLGL)
     set(OFFSCREEN_METHOD "Windows WGL")
     message(STATUS "Offscreen OpenGL Context - using Microsoft WGL")
-    set(PLATFORM_SOURCES ${PLATFORM_SOURCES} src/glview/offscreen-old/OffscreenContextWGL.cc)
+    set(PLATFORM_SOURCES ${PLATFORM_SOURCES} 
+    src/glview/offscreen-old/OffscreenContextWGL.cc
+    src/glview/OffscreenContextWGL.cc)
   endif()
 endif()
 
