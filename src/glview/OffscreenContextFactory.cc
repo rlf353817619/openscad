@@ -29,16 +29,16 @@ const char *defaultProvider() {
   return "nullgl";
 #else
 #ifdef __APPLE__
-  return "nsopengl-old";
+  return "cgl";
 #endif
 #ifdef ENABLE_EGL
-  return "egl-old";
+  return "egl";
 #endif
 #ifdef ENABLE_GLX
-  return "glx-old";
+  return "glx";
 #endif
 #ifdef _WIN32
-  return "wgl-old";
+  return "wgl";
 #endif
 #endif  // NULLGL
 }
