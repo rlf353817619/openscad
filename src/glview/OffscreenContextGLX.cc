@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include "scope_guard.hpp"
+#include "printutils.h"
 
 namespace {
 
@@ -168,7 +169,7 @@ std::shared_ptr<OffscreenContext> CreateOffscreenContextGLX(size_t width, size_t
   }
   int glxMajor = GLAD_VERSION_MAJOR(glxVersion);
   int glxMinor = GLAD_VERSION_MINOR(glxVersion);
-  std::cout << "GLAD: Loaded GLX " << glxMajor << "." << glxMinor << std::endl;
+  PRINTDB("GLAD: Loaded GLX %d.%d", glxMajor % glxMinor);
 
   // We require GLX >= 1.3.
   // However, glxQueryVersion sometimes returns an earlier version than is actually available, so 
