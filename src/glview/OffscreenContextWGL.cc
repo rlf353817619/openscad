@@ -10,6 +10,8 @@
 #define GLAD_WGL_IMPLEMENTATION
 #include <glad/wgl.h>
 
+#include "printutils.h"
+
 class OffscreenContextWGL : public OffscreenContext {
 
 public:
@@ -49,13 +51,13 @@ std::shared_ptr<OffscreenContext> CreateOffscreenContextWGL(size_t width, size_t
     .cbSize = sizeof(WNDCLASSEX),
     .style = CS_OWNDC,
     .lpfnWndProc = &DefWindowProc,
-    .lpszClassName = L"OffscreenClass"
+    .lpszClassName = L"OpenSCAD"
   };
   // FIXME: Check for ERROR_CLASS_ALREADY_EXISTS ?
   RegisterClassEx(&wndClass);
   // Create the window. Position and size it.
   // Style the window and remove the caption bar (WS_POPUP)
-  ctx->window = CreateWindowEx(0, L"OffscreenClass", L"offscreen", WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
+  ctx->window = CreateWindowEx(0, L"OpenSCAD", L"openscad", WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
     CW_USEDEFAULT, CW_USEDEFAULT, width, height, 0, 0, 0, 0);
   ctx->devContext = GetDC(ctx->window);
 
@@ -80,7 +82,7 @@ std::shared_ptr<OffscreenContext> CreateOffscreenContextWGL(size_t width, size_t
   }
   wglMakeCurrent(ctx->devContext, tmpRenderContext);
   auto wglVersion = gladLoaderLoadWGL(ctx->devContext);
-  std::cout << "GLAD: Loaded WGL " << GLAD_VERSION_MAJOR(wglVersion) << "." << GLAD_VERSION_MINOR(wglVersion) << std::endl;
+  PRINTDB("GLAD: Loaded WGL %d.%d", GLAD_VERSION_MAJOR(wglVersion) % GLAD_VERSION_MINOR(wglVersion));
   // FIXME: If version == 0, GLAD failed and we cannot use any extensions (or WGL at all?)
   // We need to check if wglCreateContextAttribsARB == 0. When is this function available? WGL 1.0 or is it an extension?
   
@@ -92,7 +94,6 @@ std::shared_ptr<OffscreenContext> CreateOffscreenContextWGL(size_t width, size_t
     0
   };  
   ctx->renderContext = wglCreateContextAttribsARB(ctx->devContext, nullptr, attributes);
-  std::cout << "PPP" << std::endl;
   if (ctx->renderContext == nullptr) {
     std::cerr << "wglCreateContextAttribsARB() failed: " << GetLastError() << std::endl;
     return nullptr;
