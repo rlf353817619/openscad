@@ -1428,6 +1428,8 @@ if(APPLE)
     ${NEF3_BROKEN_TESTS}
     # issue3158 test failing on macos, see: https://github.com/openscad/openscad/issues/4509
     opencsgtest_issue3158
+    # On macOS, GL_POINTS are sometimes circular even though GL_POINT_SMOOTH is disabled
+    openscad-viewoptions-wireframe_view-options-tests
     PROPERTIES DISABLED TRUE
   )
 elseif(UNIX)
