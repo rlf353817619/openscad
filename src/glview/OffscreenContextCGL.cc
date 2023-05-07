@@ -10,7 +10,7 @@ class OffscreenContextCGL : public OffscreenContext {
 public:
   OffscreenContextCGL(int width, int height) : OffscreenContext(width, height) {}
   ~OffscreenContextCGL() {
-    // FIXME: Implement
+    CGLDestroyContext(cglContext);
   }
 
   // FIXME: What info are we really interested in here?
@@ -38,8 +38,7 @@ std::shared_ptr<OffscreenContext> CreateOffscreenContextCGL(size_t width, size_t
   else if (majorGLVersion >= 3) glVersion = kCGLOGLPVersion_GL3_Core;
 
   CGLPixelFormatAttribute attributes[13] = {
-    kCGLPFAOpenGLProfile,
-    (CGLPixelFormatAttribute)glVersion,
+    kCGLPFAOpenGLProfile, (CGLPixelFormatAttribute)glVersion,
     kCGLPFAColorSize, (CGLPixelFormatAttribute)24,
     kCGLPFAAlphaSize, (CGLPixelFormatAttribute)8,
     kCGLPFADoubleBuffer,
@@ -55,7 +54,7 @@ std::shared_ptr<OffscreenContext> CreateOffscreenContextCGL(size_t width, size_t
     return nullptr;
   }
   CGLCreateContext(pixelFormat, NULL, &ctx->cglContext);
-  CGLDestroyPixelFormat(pixelFormat); // or CGLReleasePixelFormat()
+  CGLDestroyPixelFormat(pixelFormat);
 
   return ctx;
 }
