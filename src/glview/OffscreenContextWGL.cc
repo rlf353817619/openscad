@@ -38,8 +38,7 @@ public:
   }
 
   bool makeCurrent() const override {
-    wglMakeCurrent(this->deviceContext, this->renderContext);
-    return true;
+    return wglMakeCurrent(this->deviceContext, this->renderContext);
   }
 };
 
