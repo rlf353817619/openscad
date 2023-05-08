@@ -19,7 +19,7 @@ jobs:
       - name: Setup MSYS2 Environment
         uses: msys2/setup-msys2@v2
         with:
-          msystem: UCRT64
+          msystem: CLANG64
           update: true
       - name: Install MSYS2 Dependencies
         run: |
