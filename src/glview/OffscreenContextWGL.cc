@@ -116,8 +116,8 @@ std::shared_ptr<OffscreenContext> CreateOffscreenContextWGL(size_t width, size_t
   // Note: If we want to use wglChoosePixelFormatARB() to request a special pixel format, we could do that here.
 
   int attributes[] = {
-    WGL_CONTEXT_MAJOR_VERSION_ARB, majorGLVersion,
-    WGL_CONTEXT_MINOR_VERSION_ARB, minorGLVersion,
+    WGL_CONTEXT_MAJOR_VERSION_ARB, static_cast<int>(majorGLVersion),
+    WGL_CONTEXT_MINOR_VERSION_ARB, static_cast<int>(minorGLVersion),
     WGL_CONTEXT_PROFILE_MASK_ARB,
     compatibilityProfile ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB : WGL_CONTEXT_CORE_PROFILE_BIT_ARB,         
     0
