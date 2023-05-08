@@ -1,4 +1,4 @@
-#include "OffscreenContextWGL.h"
+﻿#include "OffscreenContextWGL.h"
 
 #include <iostream>
 #include <sstream>
@@ -11,19 +11,20 @@
 #include <glad/wgl.h>
 
 #include "printutils.h"
+#include "scope_guard.hpp"
 
 class OffscreenContextWGL : public OffscreenContext {
 
 public:
   HWND window = nullptr;
-  HDC devContext = nullptr;
+  HDC deviceContext = nullptr;
   HGLRC renderContext = nullptr;
 
   OffscreenContextWGL(int width, int height) : OffscreenContext(width, height) {}
   ~OffscreenContextWGL() {
     wglMakeCurrent(nullptr, nullptr);
     if (this->renderContext) wglDeleteContext(this->renderContext);
-    if (this->devContext) ReleaseDC(this->window, this->devContext);
+    if (this->deviceContext) ReleaseDC(this->window, this->deviceContext);
     if (this->window) DestroyWindow(this->window);
   }
 
@@ -37,7 +38,7 @@ public:
   }
 
   bool makeCurrent() const override {
-    wglMakeCurrent(this->devContext, this->renderContext);
+    wglMakeCurrent(this->deviceContext, this->renderContext);
     return true;
   }
 };
@@ -53,39 +54,68 @@ std::shared_ptr<OffscreenContext> CreateOffscreenContextWGL(size_t width, size_t
     .lpfnWndProc = &DefWindowProc,
     .lpszClassName = L"OpenSCAD"
   };
-  // FIXME: Check for ERROR_CLASS_ALREADY_EXISTS ?
-  RegisterClassEx(&wndClass);
+  static ATOM atom = RegisterClassEx(&wndClass);
+
   // Create the window. Position and size it.
   // Style the window and remove the caption bar (WS_POPUP)
-  ctx->window = CreateWindowEx(0, L"OpenSCAD", L"openscad", WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
+  ctx->window = CreateWindowEx(0, MAKEINTATOM(atom), L"openscad", WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
     CW_USEDEFAULT, CW_USEDEFAULT, width, height, 0, 0, 0, 0);
-  ctx->devContext = GetDC(ctx->window);
+  ctx->deviceContext = GetDC(ctx->window);
+  if (ctx->deviceContext == nullptr) {
+    std::cerr << "GetDC() failed: " << std::system_category().message(GetLastError()) << std::endl;
+    return nullptr;
+  }
 
   PIXELFORMATDESCRIPTOR pixelFormatDesc = {
     .nSize = sizeof(PIXELFORMATDESCRIPTOR),
     .nVersion = 1,
-    // FIXME: Can we remove PFD_DOUBLEBUFFER for offscreen rendering?
-    .dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+    .dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL,
     .iPixelType = PFD_TYPE_RGBA,
+
     .cColorBits = 32,
     .cDepthBits = 24,
     .cStencilBits = 8
   };
-  int pixelFormat = ChoosePixelFormat(ctx->devContext, &pixelFormatDesc);
-  SetPixelFormat(ctx->devContext, pixelFormat, &pixelFormatDesc);
-  // FIXME: Use wglChoosePixelFormatARB() if appropriate
-
-  const auto tmpRenderContext = wglCreateContext(ctx->devContext);
-  if (tmpRenderContext == nullptr) {
-    std::cerr << "wglCreateContext() failed: " << GetLastError() << std::endl;
+  int pixelFormat = ChoosePixelFormat(ctx->deviceContext, &pixelFormatDesc);
+  if (!pixelFormat) {
+    std::cerr << "ChoosePixelFormat() failed: " << std::system_category().message(GetLastError()) << std::endl;
     return nullptr;
   }
-  wglMakeCurrent(ctx->devContext, tmpRenderContext);
-  auto wglVersion = gladLoaderLoadWGL(ctx->devContext);
+
+  if (!SetPixelFormat(ctx->deviceContext, pixelFormat, &pixelFormatDesc)) {
+    std::cerr << "SetPixelFormat() failed: " << std::system_category().message(GetLastError()) << std::endl;
+    return nullptr;
+  }
+
+  const auto tmpRenderContext = wglCreateContext(ctx->deviceContext);
+  if (tmpRenderContext == nullptr) {
+    std::cerr << "wglCreateContext() failed: " << std::system_category().message(GetLastError()) << std::endl;
+    return nullptr;
+  }
+  auto guard = sg::make_scope_guard([tmpRenderContext]() {
+    wglMakeCurrent(nullptr, nullptr);
+    wglDeleteContext(tmpRenderContext);
+  });
+
+  if (!wglMakeCurrent(ctx->deviceContext, tmpRenderContext)) {
+    std::cerr << "wglMakeCurrent() failed: " << std::system_category().message(GetLastError()) << std::endl;
+    return nullptr;
+  }
+
+  auto wglVersion = gladLoaderLoadWGL(ctx->deviceContext);
+  if (wglVersion == 0) {
+    std::cerr << "GLAD: Unable to load WGL" << std::endl;
+    return nullptr;
+  }
   PRINTDB("GLAD: Loaded WGL %d.%d", GLAD_VERSION_MAJOR(wglVersion) % GLAD_VERSION_MINOR(wglVersion));
-  // FIXME: If version == 0, GLAD failed and we cannot use any extensions (or WGL at all?)
-  // We need to check if wglCreateContextAttribsARB == 0. When is this function available? WGL 1.0 or is it an extension?
-  
+
+  if (!wglCreateContextAttribsARB) {
+    std::cerr << "wglCreateContextAttribsARB() not available" << std::endl;
+    return nullptr;
+  }
+
+  // Note: If we want to use wglChoosePixelFormatARB() to request a special pixel format, we could do that here.
+
   int attributes[] = {
     WGL_CONTEXT_MAJOR_VERSION_ARB, majorGLVersion,
     WGL_CONTEXT_MINOR_VERSION_ARB, minorGLVersion,
@@ -93,16 +123,11 @@ std::shared_ptr<OffscreenContext> CreateOffscreenContextWGL(size_t width, size_t
     compatibilityProfile ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB : WGL_CONTEXT_CORE_PROFILE_BIT_ARB,         
     0
   };  
-  ctx->renderContext = wglCreateContextAttribsARB(ctx->devContext, nullptr, attributes);
+  ctx->renderContext = wglCreateContextAttribsARB(ctx->deviceContext, nullptr, attributes);
   if (ctx->renderContext == nullptr) {
-    std::cerr << "wglCreateContextAttribsARB() failed: " << GetLastError() << std::endl;
+    std::cerr << "wglCreateContextAttribsARB() failed: " << std::system_category().message(GetLastError()) << std::endl;
     return nullptr;
   }
 
-  wglMakeCurrent(nullptr, nullptr);
-  if (!wglDeleteContext(tmpRenderContext)) {
-    std::cerr << "wglDeleteContext() failed: " << GetLastError() << std::endl;
-    return nullptr;
-  }
   return ctx;
 }
