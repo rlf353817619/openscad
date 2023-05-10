@@ -21,6 +21,8 @@ jobs:
         with:
           msystem: UCRT64
           update: true
+      - name: System Info
+        run: systeminfo
       - name: Install MSYS2 Dependencies
         run: |
           pwd
