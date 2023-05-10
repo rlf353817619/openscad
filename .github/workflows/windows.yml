@@ -22,7 +22,9 @@ jobs:
           msystem: UCRT64
           update: true
       - name: System Info
-        run: systeminfo
+        run: |
+          systeminfo
+          /usr/bin/time -v /usr/bin/echo
       - name: Install MSYS2 Dependencies
         run: |
           pwd
@@ -36,7 +38,7 @@ jobs:
         run: |
           git submodule update --init --recursive
           mkdir build && cd build
-          cmake .. -G"Ninja" -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DEXPERIMENTAL=ON -DSNAPSHOT=ON
+          CXX="$PWD/../scripts/g++_mem_monitor.sh" cmake .. -G"Ninja" -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DEXPERIMENTAL=ON -DSNAPSHOT=ON
           cmake --build . -j1
           cmake --install . --prefix=.
       - name: Run Test Suite
